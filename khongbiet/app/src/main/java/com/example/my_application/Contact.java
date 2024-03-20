@@ -1,5 +1,9 @@
 package com.example.my_application;
 
+import android.net.Uri;
+
+import java.net.URI;
+
 public class Contact{
     private int id;
     private String images;

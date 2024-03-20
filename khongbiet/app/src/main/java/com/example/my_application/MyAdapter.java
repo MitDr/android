@@ -2,10 +2,13 @@ package com.example.my_application;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -13,7 +16,7 @@ import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
 
-public class MyAdapter extends BaseAdapter {
+public class MyAdapter extends BaseAdapter implements Filterable {
     private ArrayList<Contact> data;
     private ArrayList<Contact> dataBackUp;
     private Activity context;
@@ -88,15 +91,52 @@ public class MyAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;
-        if(v == null){
             v = inflater.inflate(R.layout.contact_item, null);
             ImageView imageProfile = v.findViewById(R.id.imageView);
             TextView tvName = v.findViewById(R.id.textView3);
             TextView tvPhone = v.findViewById(R.id.textView4);
             tvName.setText(data.get(position).getName());
             tvPhone.setText(data.get(position).getPhone());
-//            imageProfile.setImageResource(data.get(position).getImages().);
-        }
+            Uri uri = Uri.parse(data.get(position).getImages());
+            imageProfile.setImageURI(uri);
         return v;
+    }
+
+    @Override
+    public Filter getFilter() {
+        Filter f = new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults results = new FilterResults();
+                if (dataBackUp == null) {
+                    dataBackUp = new ArrayList<>(data);
+                }
+                if (constraint == null || constraint.length() == 0) {
+                    results.count = dataBackUp.size();
+                    results.values = dataBackUp;
+                } else {
+                    ArrayList<Contact> filteredList = new ArrayList<>();
+                    for (Contact contact : dataBackUp) {
+                        if (contact.getName().toLowerCase().contains(constraint.toString().toLowerCase())) {
+                            filteredList.add(contact);
+                        }
+                    }
+                    results.count = filteredList.size();
+                    results.values = filteredList;
+                }
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                data = new ArrayList<Contact>();
+                ArrayList<Contact> tmp = (ArrayList<Contact>) results.values;
+                for (Contact contact : tmp) {
+                    data.add(contact);
+                }
+                notifyDataSetChanged();
+            }
+        };
+        return f;
     }
 }
